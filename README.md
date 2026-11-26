@@ -59,8 +59,15 @@ Full app documentation: [src/SwarmCastStudio/README.md](src/SwarmCastStudio/READ
 
 ## Requirements
 
-- Windows 10/11
+- Windows 10/11 (x64)
 - OpenCode Desktop running and signed in
 - opencode-swarm installed in OpenCode
 
-The app requires OpenCode Desktop; the self-contained exe only removes the .NET runtime dependency.
+The app discovers the desktop CLI automatically, in this order:
+
+1. `SWARMCAST_OPENCODE_CLI` environment variable
+2. `%LOCALAPPDATA%\Programs\ai.opencode.desktop\resources\opencode-cli.exe`
+3. `opencode` on `PATH`
+4. `%LOCALAPPDATA%\Programs\opencode\opencode.exe`
+
+If OpenCode is installed elsewhere, set `SWARMCAST_OPENCODE_CLI` to the full path of `opencode-cli.exe`. The self-contained exe only removes the .NET runtime dependency; OpenCode Desktop is still required.
