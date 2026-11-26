@@ -4,6 +4,10 @@ A Windows desktop editor for the **opencode-swarm** agent cast: choose which age
 
 Built with C# / WPF / .NET 9. No third-party packages. It talks to the running OpenCode Desktop app through its bundled CLI, so the model picker only shows models that actually exist on this machine.
 
+## Download
+
+[Latest release](https://github.com/Tayo-Aina/swarm-cast-studio/releases/latest) — `SwarmCastStudio-win-x64.exe`, self-contained single file (no .NET runtime required). A SHA-256 checksum is attached.
+
 ## Highlights
 
 - All **26 swarm roles**, grouped by category, with live registration markers
