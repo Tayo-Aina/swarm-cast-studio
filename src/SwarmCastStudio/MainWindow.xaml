@@ -1,0 +1,1217 @@
+<Window x:Class="SwarmCastStudio.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:SwarmCastStudio.ViewModels"
+        xmlns:models="clr-namespace:SwarmCastStudio.Models"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Swarm Cast Studio"
+        Icon="Assets/app.ico"
+        Width="1360"
+        Height="840"
+        MinWidth="1180"
+        MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{StaticResource WindowBackgroundBrush}"
+        Foreground="{StaticResource TextBrush}"
+        FontFamily="{StaticResource UiFont}"
+        SnapsToDevicePixels="True"
+        UseLayoutRounding="True"
+        TextOptions.TextFormattingMode="Display"
+        Loaded="Window_Loaded"
+        Closing="Window_Closing"
+        StateChanged="Window_StateChanged">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="68"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveCommand}" />
+        <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+    </Window.InputBindings>
+
+    <Window.Resources>
+        <Style x:Key="SwarmGroupItemStyle" TargetType="{x:Type GroupItem}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="{x:Type GroupItem}">
+                        <StackPanel>
+                            <Border Margin="4,10,4,3">
+                                <TextBlock Text="{Binding Name, Converter={StaticResource GroupDisplayName}}"
+                                           Style="{StaticResource MetaText}"
+                                           Foreground="{StaticResource SubtleTextBrush}" />
+                            </Border>
+                            <ItemsPresenter />
+                        </StackPanel>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="{StaticResource PanelBorderBrush}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="68" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- Header / custom caption -->
+            <Border Grid.Row="0"
+                    Background="{StaticResource HeaderBackgroundBrush}"
+                    BorderBrush="{StaticResource PanelBorderBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid Margin="16,0,8,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="36" Height="36"
+                                CornerRadius="10"
+                                Margin="0,0,12,0"
+                                Background="#141414"
+                                BorderBrush="#2E2E2E"
+                                BorderThickness="1">
+                            <Image Source="Assets/swarm-mark.png"
+                                   Width="24"
+                                   Height="24"
+                                   Stretch="Uniform"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Swarm Cast Studio"
+                                       FontSize="15"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextBrush}" />
+                            <TextBlock Text="OpenCode swarm cast editor"
+                                       FontSize="10.5"
+                                       Foreground="{StaticResource MutedBrush}"
+                                       Margin="0,2,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Border Grid.Column="2"
+                            Style="{StaticResource StatusPill}"
+                            VerticalAlignment="Center"
+                            Margin="0,0,12,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="7" Height="7"
+                                     Style="{StaticResource StatusDot}"
+                                     Margin="0,0,7,0" />
+                            <TextBlock Text="{Binding StatusPillText}"
+                                       FontSize="10"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextBrush}" />
+                        </StackPanel>
+                    </Border>
+
+                    <Button Grid.Column="3"
+                            Style="{StaticResource GhostButton}"
+                            Command="{Binding RefreshCommand}"
+                            Padding="12,7"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Reload the live model and agent catalog (F5)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE72C;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="11"
+                                       Margin="0,0,7,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+                            <TextBlock Text="Refresh"
+                                       FontSize="12"
+                                       VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Grid.Column="4"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding SaveCommand}"
+                            Padding="16,8"
+                            VerticalAlignment="Center"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                            ToolTip="Write the config and reload OpenCode (Ctrl+S)">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE74E;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="12"
+                                       Margin="0,0,8,0"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource WhiteBrush}" />
+                            <TextBlock Text="Save &amp; Reload"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center"
+                                       Foreground="{StaticResource WhiteBrush}" />
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel Grid.Column="5"
+                                Orientation="Horizontal"
+                                VerticalAlignment="Center"
+                                Margin="12,0,0,0">
+                        <Button Style="{StaticResource CaptionButton}"
+                                Click="Minimize_Click"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                ToolTip="Minimize">
+                            <TextBlock Text="&#xE921;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+                        </Button>
+                        <Button Style="{StaticResource CaptionButton}"
+                                Click="MaximizeRestore_Click"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                ToolTip="Maximize or restore">
+                            <TextBlock x:Name="MaximizeGlyph"
+                                       Text="&#xE922;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+                        </Button>
+                        <Button Style="{StaticResource CloseCaptionButton}"
+                                Click="Close_Click"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True"
+                                ToolTip="Close">
+                            <TextBlock Text="&#xE8BB;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="10"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Error banner -->
+            <Border Grid.Row="1"
+                    Margin="16,10,16,0"
+                    Background="{StaticResource DangerSoftBrush}"
+                    BorderBrush="{StaticResource DangerBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12,9"
+                    Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="&#xE7BA;"
+                               FontFamily="Segoe MDL2 Assets"
+                               FontSize="14"
+                               Foreground="{StaticResource DangerBrush}"
+                               VerticalAlignment="Top"
+                               Margin="0,1,10,0" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="Needs attention"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource TextBrush}" />
+                        <TextBlock Text="{Binding ErrorMessage}"
+                                   FontSize="11"
+                                   Foreground="{StaticResource SubtleTextBrush}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,12,0" />
+                    </StackPanel>
+                    <Button Grid.Column="2"
+                            Style="{StaticResource GhostButton}"
+                            Content="Retry"
+                            Command="{Binding RetryCommand}"
+                            Padding="10,4"
+                            MinHeight="28"
+                            FontSize="11"
+                            VerticalAlignment="Center"
+                            ToolTip="Retry the failed configuration load and recreate the OpenCode connection" />
+                </Grid>
+            </Border>
+
+            <!-- Three-column workspace -->
+            <Grid Grid.Row="2" Margin="16,12,16,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="320" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" MinWidth="480" />
+                    <ColumnDefinition Width="14" />
+                    <ColumnDefinition Width="*" MinWidth="290" MaxWidth="344" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Left: swarm cast -->
+                <Border Grid.Column="0" Style="{StaticResource Card}" Padding="12,14,12,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="Swarm cast" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Plugin roles, grouped by category"
+                                           Style="{StaticResource MutedText}"
+                                           FontSize="11"
+                                           Margin="0,3,0,0" />
+                            </StackPanel>
+                            <Border Grid.Column="1" Style="{StaticResource CountBadge}" VerticalAlignment="Top">
+                                <TextBlock Text="{Binding AgentRoleCount}"
+                                           Style="{StaticResource BadgeText}"
+                                           Foreground="{StaticResource SubtleTextBrush}" />
+                            </Border>
+                        </Grid>
+
+                        <Grid Grid.Row="1" Height="36" Margin="0,12,0,8">
+                            <TextBox x:Name="AgentSearchBox"
+                                     Style="{StaticResource SearchTextBox}"
+                                     Text="{Binding AgentSearch, UpdateSourceTrigger=PropertyChanged}"
+                                     AutomationProperties.Name="Search agents"
+                                     AutomationProperties.AutomationId="AgentSearchBox"
+                                     Foreground="{StaticResource TextBrush}"
+                                     CaretBrush="{StaticResource AccentBrush}"
+                                     SelectionBrush="{StaticResource AccentBrush}"
+                                     SelectionOpacity="0.45"
+                                     Padding="34,8,10,8"
+                                     Height="36" />
+                            <TextBlock Text="&#xE721;"
+                                       FontFamily="Segoe MDL2 Assets"
+                                       FontSize="13"
+                                       Foreground="{StaticResource MutedBrush}"
+                                       Margin="12,0,0,0"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False" />
+                            <TextBlock Text="Search agents…"
+                                       FontSize="12.5"
+                                       Foreground="{StaticResource MutedBrush}"
+                                       Margin="34,0,10,0"
+                                       VerticalAlignment="Center"
+                                       IsHitTestVisible="False">
+                                <TextBlock.Visibility>
+                                    <MultiBinding Converter="{StaticResource SearchPlaceholderVisibility}">
+                                        <Binding Path="Text" ElementName="AgentSearchBox" />
+                                        <Binding Path="IsKeyboardFocusWithin" ElementName="AgentSearchBox" />
+                                    </MultiBinding>
+                                </TextBlock.Visibility>
+                            </TextBlock>
+                        </Grid>
+
+                        <ListBox Grid.Row="2"
+                                 ItemsSource="{Binding AgentsView}"
+                                 SelectedItem="{Binding SelectedAgent, Mode=TwoWay}"
+                                 SelectionMode="Single"
+                                 IsSynchronizedWithCurrentItem="False"
+                                 IsEnabled="{Binding IsEditingEnabled}">
+                            <ListBox.GroupStyle>
+                                <GroupStyle ContainerStyle="{StaticResource SwarmGroupItemStyle}" />
+                            </ListBox.GroupStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate DataType="{x:Type vm:AgentRowViewModel}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <CheckBox IsChecked="{Binding IsEnabled, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  IsEnabled="{Binding CanEdit}"
+                                                  VerticalAlignment="Center"
+                                                  ToolTip="Include this agent in the swarm" />
+
+                                        <StackPanel Grid.Column="1" Margin="4,0,8,0" VerticalAlignment="Center">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+                                                <Ellipse Width="4" Height="4"
+                                                         Fill="{StaticResource AccentBrush}"
+                                                         Margin="1,0,6,0"
+                                                         VerticalAlignment="Center"
+                                                         ToolTip="Core pipeline agent"
+                                                         Visibility="{Binding IsCore, Converter={StaticResource BoolToVisibility}}" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding DisplayName}"
+                                                           FontSize="13"
+                                                           FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding Description}" />
+                                            </Grid>
+                                            <Grid Margin="0,3,0,0">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding ModelDisplay}"
+                                                           Style="{StaticResource MutedText}"
+                                                           FontSize="10.5"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           ToolTip="{Binding ModelDisplay}" />
+                                                <Ellipse Grid.Column="1"
+                                                         Width="5" Height="5"
+                                                         Fill="{StaticResource SuccessBrush}"
+                                                         Margin="8,0,4,0"
+                                                         VerticalAlignment="Center"
+                                                         Visibility="{Binding IsLive, Converter={StaticResource BoolToVisibility}}" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="LIVE"
+                                                           FontSize="9"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{StaticResource SuccessBrush}"
+                                                           VerticalAlignment="Center"
+                                                           Visibility="{Binding IsLive, Converter={StaticResource BoolToVisibility}}" />
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <Border Grid.Column="2"
+                                                Style="{StaticResource FeatureOffBadge}"
+                                                ToolTip="{Binding GateNote}"
+                                                Visibility="{Binding GateSatisfied, Converter={StaticResource InverseBoolToVisibility}}">
+                                            <TextBlock Text="FEATURE OFF"
+                                                       Style="{StaticResource BadgeText}"
+                                                       Foreground="{StaticResource WarningBrush}" />
+                                        </Border>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock Grid.Row="3"
+                                   Text="Conditional roles unlock when their feature gate is enabled."
+                                   Style="{StaticResource MutedText}"
+                                   FontSize="10"
+                                   TextWrapping="Wrap"
+                                   Margin="2,8,2,0" />
+                    </Grid>
+                </Border>
+
+                <!-- Center: agent editor -->
+                <Grid Grid.Column="2">
+                    <Grid Visibility="{Binding HasSelectedAgent, Converter={StaticResource BoolToVisibility}}"
+                          IsEnabled="{Binding IsEditingEnabled}">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="12" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <!-- Selected agent summary -->
+                        <Border Grid.Row="0" Style="{StaticResource Card}" Padding="16,14">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding SelectedAgent.Category}"
+                                                       Style="{StaticResource MetaText}" />
+                                            <Border Style="{StaticResource Badge}"
+                                                    Background="{StaticResource AccentSoftBrush}"
+                                                    BorderBrush="{StaticResource AccentBorderBrush}"
+                                                    Margin="8,0,0,0"
+                                                    Visibility="{Binding SelectedAgent.IsCore, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="CORE"
+                                                           Style="{StaticResource BadgeText}"
+                                                           Foreground="{StaticResource AccentBrush}" />
+                                            </Border>
+                                            <Border Style="{StaticResource WarningBadge}"
+                                                    Margin="8,0,0,0"
+                                                    Visibility="{Binding SelectedAgent.GateSatisfied, Converter={StaticResource InverseBoolToVisibility}}">
+                                                <TextBlock Text="FEATURE OFF"
+                                                           Style="{StaticResource BadgeText}"
+                                                           Foreground="{StaticResource WarningBrush}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding SelectedAgent.DisplayName}"
+                                                   FontSize="21"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,7,0,0" />
+                                        <TextBlock Text="{Binding SelectedAgent.Description}"
+                                                   Style="{StaticResource MutedText}"
+                                                   TextWrapping="Wrap"
+                                                   MaxHeight="46"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Margin="0,6,12,0" />
+                                    </StackPanel>
+
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Top">
+                                        <CheckBox Content="Enabled"
+                                                  IsChecked="{Binding SelectedAgent.IsEnabled, Mode=TwoWay}"
+                                                  IsEnabled="{Binding SelectedAgent.CanEdit}" />
+                                        <TextBlock Text="{Binding SelectedAgent.GateNote}"
+                                                   Foreground="{StaticResource WarningBrush}"
+                                                   FontSize="10"
+                                                   TextWrapping="Wrap"
+                                                   MaxWidth="150"
+                                                   TextAlignment="Right"
+                                                   Margin="0,7,0,0"
+                                                   Visibility="{Binding SelectedAgent.GateSatisfied, Converter={StaticResource InverseBoolToVisibility}}" />
+                                    </StackPanel>
+                                </Grid>
+
+                                <Grid Grid.Row="1" Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse Width="6" Height="6" VerticalAlignment="Center" Margin="0,0,6,0">
+                                        <Ellipse.Style>
+                                            <Style TargetType="{x:Type Ellipse}">
+                                                <Setter Property="Fill" Value="{StaticResource MutedBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding SelectedAgent.IsLive}" Value="True">
+                                                        <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Ellipse.Style>
+                                    </Ellipse>
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding SelectedAgent.LiveStatusText}"
+                                               Style="{StaticResource MutedText}"
+                                               FontSize="11"
+                                               TextTrimming="CharacterEllipsis"
+                                               ToolTip="{Binding SelectedAgent.LiveStatusText}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <ScrollViewer Grid.Row="2"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel>
+                                <!-- Model library -->
+                                <Border Style="{StaticResource Card}" Padding="14" Height="360">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="Model library" Style="{StaticResource SectionTitle}" />
+                                        <TextBlock Text="Grouped by provider"
+                                                   Style="{StaticResource MutedText}"
+                                                   FontSize="10.5"
+                                                   Margin="0,3,0,0" />
+                                    </StackPanel>
+                                    <Border Grid.Column="1"
+                                            Style="{StaticResource ModelChip}"
+                                            MaxWidth="320"
+                                            ToolTip="{Binding SelectedAgent.Model}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="PRIMARY"
+                                                       Style="{StaticResource MetaText}"
+                                                       FontSize="8.5"
+                                                       Margin="0,0,7,0"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Text="{Binding SelectedAgent.Model, TargetNullValue=Unassigned}"
+                                                       FontFamily="{StaticResource CodeFont}"
+                                                       FontSize="10.5"
+                                                       Foreground="{StaticResource TextBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       MaxWidth="205"
+                                                       VerticalAlignment="Center" />
+                                            <Button Style="{StaticResource TinyIconButton}"
+                                                    Width="18"
+                                                    Height="18"
+                                                    MinWidth="0"
+                                                    MinHeight="0"
+                                                    Margin="5,0,0,0"
+                                                    Command="{Binding ClearPrimaryModelCommand}"
+                                                    AutomationProperties.Name="Clear primary model"
+                                                    ToolTip="Clear the primary model"
+                                                    Visibility="{Binding SelectedAgent.HasModel, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="&#xE711;"
+                                                           FontFamily="Segoe MDL2 Assets"
+                                                           FontSize="8"
+                                                           Foreground="{StaticResource MutedBrush}"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center" />
+                                            </Button>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+
+                                <Grid Grid.Row="1" Height="36" Margin="0,10,0,8">
+                                    <TextBox x:Name="ModelSearchBox"
+                                             Style="{StaticResource SearchTextBox}"
+                                             Text="{Binding ModelSearch, UpdateSourceTrigger=PropertyChanged}"
+                                             AutomationProperties.Name="Search models or providers"
+                                             AutomationProperties.AutomationId="ModelSearchBox"
+                                             Foreground="{StaticResource TextBrush}"
+                                             CaretBrush="{StaticResource AccentBrush}"
+                                             SelectionBrush="{StaticResource AccentBrush}"
+                                             SelectionOpacity="0.45"
+                                             Padding="34,8,10,8"
+                                             Height="36" />
+                                    <TextBlock Text="&#xE721;"
+                                               FontFamily="Segoe MDL2 Assets"
+                                               FontSize="13"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               Margin="12,0,0,0"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False" />
+                                    <TextBlock Text="Search models or providers…"
+                                               FontSize="12.5"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               Margin="34,0,10,0"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False">
+                                        <TextBlock.Visibility>
+                                            <MultiBinding Converter="{StaticResource SearchPlaceholderVisibility}">
+                                                <Binding Path="Text" ElementName="ModelSearchBox" />
+                                                <Binding Path="IsKeyboardFocusWithin" ElementName="ModelSearchBox" />
+                                            </MultiBinding>
+                                        </TextBlock.Visibility>
+                                    </TextBlock>
+                                </Grid>
+
+                                <Grid Grid.Row="2">
+                                    <ListBox ItemsSource="{Binding ModelsView}"
+                                             SelectedItem="{Binding SelectedModel, Mode=TwoWay}"
+                                             SelectionMode="Single"
+                                             IsSynchronizedWithCurrentItem="False"
+                                             MouseDoubleClick="ModelList_MouseDoubleClick">
+                                        <ListBox.GroupStyle>
+                                            <GroupStyle ContainerStyle="{StaticResource SwarmGroupItemStyle}" />
+                                        </ListBox.GroupStyle>
+                                        <ListBox.ItemTemplate>
+                                            <DataTemplate DataType="{x:Type models:OpenCodeModel}">
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding DisplayName}"
+                                                               FontSize="13"
+                                                               FontWeight="SemiBold"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding DisplayName}" />
+                                                    <Grid Margin="0,4,0,0">
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                            <ColumnDefinition Width="Auto" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   Text="{Binding Ref}"
+                                                                   FontFamily="{StaticResource CodeFont}"
+                                                                   FontSize="10.5"
+                                                                   Foreground="{StaticResource MutedBrush}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   ToolTip="{Binding Ref}" />
+                                                        <TextBlock Grid.Column="1"
+                                                                   Text="{Binding ContextLabel}"
+                                                                   Foreground="{StaticResource SubtleTextBrush}"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="8,0,0,0">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="{x:Type TextBlock}"
+                                                                       BasedOn="{StaticResource {x:Type TextBlock}}">
+                                                                    <Setter Property="FontFamily" Value="{StaticResource CodeFont}" />
+                                                                    <Setter Property="FontSize" Value="10" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding ContextLimit}" Value="0">
+                                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <Border Grid.Column="2"
+                                                                Style="{StaticResource FreeBadge}"
+                                                                Margin="8,0,0,0"
+                                                                Visibility="{Binding IsFree, Converter={StaticResource BoolToVisibility}}">
+                                                            <TextBlock Text="FREE"
+                                                                       Style="{StaticResource BadgeText}"
+                                                                       Foreground="{StaticResource SuccessBrush}" />
+                                                        </Border>
+                                                        <Border Grid.Column="3"
+                                                                Style="{StaticResource WarningBadge}"
+                                                                Margin="6,0,0,0"
+                                                                Visibility="{Binding SupportsTools, Converter={StaticResource InverseBoolToVisibility}}">
+                                                            <TextBlock Text="NO TOOLS"
+                                                                       Style="{StaticResource BadgeText}"
+                                                                       Foreground="{StaticResource WarningBrush}" />
+                                                        </Border>
+                                                        <Border Grid.Column="4" Margin="6,0,0,0">
+                                                            <Border.Style>
+                                                                <Style TargetType="{x:Type Border}"
+                                                                       BasedOn="{StaticResource Badge}">
+                                                                    <Setter Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                                                                    <Setter Property="BorderBrush" Value="{StaticResource AccentBorderBrush}" />
+                                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding Status}" Value="unavailable">
+                                                                            <Setter Property="Visibility" Value="Visible" />
+                                                                        </DataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </Border.Style>
+                                                            <TextBlock Text="CONFIG"
+                                                                       Style="{StaticResource BadgeText}"
+                                                                       Foreground="{StaticResource AccentBrush}" />
+                                                        </Border>
+                                                    </Grid>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ListBox.ItemTemplate>
+                                    </ListBox>
+
+                                    <TextBlock Text="No models loaded. Check the connection, then refresh."
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               TextAlignment="Center"
+                                               TextWrapping="Wrap"
+                                               MaxWidth="260"
+                                               Foreground="{StaticResource MutedBrush}"
+                                               IsHitTestVisible="False"
+                                               Visibility="{Binding HasModels, Converter={StaticResource InverseBoolToVisibility}}" />
+                                </Grid>
+
+                                <Grid Grid.Row="3" Margin="0,7,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="Highlight a model, then use Set as primary or double-click.  FREE = no cost  ·  NO TOOLS = text-only."
+                                               Style="{StaticResource MutedText}"
+                                               FontSize="9.5"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,8,0" />
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource AccentGhostButton}"
+                                            Command="{Binding SetPrimaryModelCommand}"
+                                            AutomationProperties.Name="Set as primary"
+                                            AutomationProperties.AutomationId="SetPrimaryModelButton"
+                                            ToolTip="Apply the highlighted model to the selected agent">
+                                        <TextBlock Text="Set as primary"
+                                                   FontSize="11"
+                                                   Foreground="{StaticResource AccentBrush}" />
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                                <!-- Fallbacks and temperature -->
+                                <Border Style="{StaticResource Card}" Padding="14" Margin="0,12,0,0">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                        <TextBlock Text="Fallbacks" FontSize="13" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding SelectedAgent.Fallbacks.Count, StringFormat='({0})'}"
+                                                   Style="{StaticResource MutedText}"
+                                                   FontSize="10.5"
+                                                   Margin="6,0,0,0"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Style="{StaticResource GhostButton}"
+                                            Content="+ Add selected"
+                                            Command="{Binding AddFallbackCommand}"
+                                            Padding="8,4"
+                                            MinHeight="28"
+                                            FontSize="11" />
+                                </Grid>
+
+                                <Grid Grid.Row="1" Margin="0,7,0,0">
+                                    <ScrollViewer MaxHeight="92"
+                                                  VerticalScrollBarVisibility="Auto"
+                                                  HorizontalScrollBarVisibility="Disabled">
+                                        <ItemsControl ItemsSource="{Binding SelectedAgent.Fallbacks}">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Background="{StaticResource InputBackgroundBrush}"
+                                                            BorderBrush="{StaticResource InputBorderBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="6"
+                                                            Padding="9,4"
+                                                            Margin="0,0,0,4">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding}"
+                                                                       FontFamily="{StaticResource CodeFont}"
+                                                                       FontSize="10.5"
+                                                                       Foreground="{StaticResource SubtleTextBrush}"
+                                                                       TextTrimming="CharacterEllipsis"
+                                                                       VerticalAlignment="Center" />
+                                                            <Button Grid.Column="1"
+                                                                    Style="{StaticResource TinyIconButton}"
+                                                                    Command="{Binding DataContext.RemoveFallbackCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    ToolTip="Remove fallback">
+                                                                <TextBlock Text="&#xE711;"
+                                                                           FontFamily="Segoe MDL2 Assets"
+                                                                           FontSize="9.5"
+                                                                           Foreground="{StaticResource MutedBrush}"
+                                                                           HorizontalAlignment="Center"
+                                                                           VerticalAlignment="Center" />
+                                                            </Button>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </ScrollViewer>
+                                    <TextBlock Text="No fallbacks — the primary model is used alone."
+                                               Style="{StaticResource MutedText}"
+                                               FontSize="10.5"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False"
+                                               Visibility="{Binding SelectedAgent.HasFallbacks, Converter={StaticResource InverseBoolToVisibility}}" />
+                                </Grid>
+
+                                <Border Grid.Row="2" Style="{StaticResource Divider}" Margin="0,8" />
+
+                                <Grid Grid.Row="3">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid Grid.Row="0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <TextBlock Text="Temperature" FontSize="13" FontWeight="SemiBold" />
+                                            <TextBlock Text="0 = focused  ·  2 = exploratory"
+                                                       Style="{StaticResource MutedText}"
+                                                       FontSize="9.5"
+                                                       Margin="8,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding SelectedAgent.Temperature, StringFormat={}{0:0.00}}"
+                                                   FontFamily="{StaticResource CodeFont}"
+                                                   FontSize="12"
+                                                   Foreground="{StaticResource AccentBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,12,0" />
+                                        <CheckBox Grid.Column="2"
+                                                  Content="Override"
+                                                  IsChecked="{Binding SelectedAgent.HasTemperature, Mode=TwoWay}"
+                                                  VerticalAlignment="Center" />
+                                    </Grid>
+                                    <Slider Grid.Row="1"
+                                            Margin="0,6,0,0"
+                                            Minimum="0"
+                                            Maximum="2"
+                                            SmallChange="0.05"
+                                            LargeChange="0.2"
+                                            Value="{Binding SelectedAgent.Temperature, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                </Grid>
+                            </Grid>
+                        </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Grid>
+
+                    <Border Style="{StaticResource Card}"
+                            Visibility="{Binding HasSelectedAgent, Converter={StaticResource InverseBoolToVisibility}}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Border Width="52" Height="52"
+                                    CornerRadius="14"
+                                    Background="{StaticResource AccentSoftBrush}"
+                                    BorderBrush="{StaticResource AccentBorderBrush}"
+                                    BorderThickness="1"
+                                    HorizontalAlignment="Center">
+                                <TextBlock Text="&#xE716;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="20"
+                                           Foreground="{StaticResource AccentBrush}"
+                                           HorizontalAlignment="Center"
+                                           VerticalAlignment="Center" />
+                            </Border>
+                            <TextBlock Text="Select an agent"
+                                       FontSize="18"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,14,0,0" />
+                            <TextBlock Text="Choose a role from the swarm cast to edit its model, fallbacks, and behavior."
+                                       Style="{StaticResource MutedText}"
+                                       TextWrapping="Wrap"
+                                       MaxWidth="300"
+                                       TextAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,6,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Right: connection, target, gates, raw JSON -->
+                <ScrollViewer Grid.Column="4"
+                              VerticalScrollBarVisibility="Auto"
+                              HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel Margin="0,0,2,0">
+                        <Border Style="{StaticResource Card}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <Grid Grid.Row="0">
+                                    <TextBlock Text="Connection" Style="{StaticResource SectionTitle}" />
+                                    <Button HorizontalAlignment="Right"
+                                            Style="{StaticResource GhostButton}"
+                                            Content="Refresh"
+                                            Command="{Binding RefreshCommand}"
+                                            Padding="8,4"
+                                            MinHeight="28"
+                                            FontSize="11" />
+                                </Grid>
+
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
+                                    <Ellipse Width="7" Height="7"
+                                             Style="{StaticResource StatusDot}"
+                                             Margin="0,0,7,0" />
+                                    <TextBlock Text="{Binding ConnectionStatusText}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold" />
+                                    <TextBlock Text="  ·  OpenCode "
+                                               Style="{StaticResource MutedText}"
+                                               FontSize="11" />
+                                    <TextBlock Text="{Binding Version}"
+                                               Style="{StaticResource MutedText}"
+                                               FontSize="11" />
+                                </StackPanel>
+
+                                <Grid Grid.Row="2" Margin="0,12,0,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Text="CLI PATH" Style="{StaticResource MetaText}" />
+                                    <TextBlock Grid.Row="1"
+                                               Text="{Binding CliPath}"
+                                               FontFamily="{StaticResource CodeFont}"
+                                               FontSize="10"
+                                               Foreground="{StaticResource SubtleTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,4,0,0"
+                                               ToolTip="{Binding CliPath}" />
+                                </Grid>
+
+                                <Grid Grid.Row="3" Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="MODELS" Style="{StaticResource MetaText}" />
+                                        <TextBlock Text="{Binding ModelCount}"
+                                                   FontSize="18"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1">
+                                        <TextBlock Text="AGENTS" Style="{StaticResource MetaText}" />
+                                        <TextBlock Text="{Binding LiveAgentCount}"
+                                                   FontSize="18"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2">
+                                        <TextBlock Text="ROLES" Style="{StaticResource MetaText}" />
+                                        <TextBlock Text="{Binding AgentRoleCount}"
+                                                   FontSize="18"
+                                                   FontWeight="SemiBold"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Config target" Style="{StaticResource SectionTitle}" />
+
+                                <RadioButton Content="Global (all projects)"
+                                             IsChecked="{Binding IsGlobalTarget, Mode=TwoWay}"
+                                             IsEnabled="{Binding IsIdle}"
+                                             Margin="0,12,0,0" />
+                                <RadioButton Content="Project override"
+                                             IsChecked="{Binding IsProjectTarget, Mode=TwoWay}"
+                                             IsEnabled="{Binding IsIdle}"
+                                             Margin="0,8,0,0" />
+
+                                <StackPanel Margin="27,8,0,0"
+                                            Visibility="{Binding IsProjectTarget, Converter={StaticResource BoolToVisibility}}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Background="{StaticResource InputBackgroundBrush}"
+                                                BorderBrush="{StaticResource InputBorderBrush}"
+                                                BorderThickness="1"
+                                                CornerRadius="6"
+                                                Padding="9,6">
+                                            <TextBlock Text="{Binding ProjectFolderDisplay}"
+                                                       FontFamily="{StaticResource CodeFont}"
+                                                       FontSize="10"
+                                                       Foreground="{StaticResource SubtleTextBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       ToolTip="{Binding ProjectDirectory}" />
+                                        </Border>
+                                        <Button Grid.Column="1"
+                                                Style="{StaticResource GhostButton}"
+                                                Content="Browse…"
+                                                Command="{Binding BrowseFolderCommand}"
+                                                Padding="10,4"
+                                                MinHeight="30"
+                                                Margin="8,0,0,0"
+                                                FontSize="11" />
+                                    </Grid>
+                                    <TextBlock Text="A missing project file is seeded from the global config when loaded."
+                                               Style="{StaticResource MutedText}"
+                                               FontSize="10"
+                                               TextWrapping="Wrap"
+                                               Margin="0,6,0,0" />
+                                </StackPanel>
+
+                                <Border Style="{StaticResource Divider}" />
+
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="CONFIG FILE" Style="{StaticResource MetaText}" VerticalAlignment="Center" />
+                                    <Border Grid.Column="1" Style="{StaticResource Badge}">
+                                        <TextBlock Text="{Binding ConfigExistsLabel}"
+                                                   Style="{StaticResource BadgeText}"
+                                                   Foreground="{StaticResource MutedBrush}" />
+                                    </Border>
+                                </Grid>
+                                <TextBlock Text="{Binding ConfigPath}"
+                                           FontFamily="{StaticResource CodeFont}"
+                                           FontSize="10"
+                                           Foreground="{StaticResource SubtleTextBrush}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,5,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Feature gates" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Optional roles stay locked until the matching gate is enabled."
+                                           Style="{StaticResource MutedText}"
+                                           FontSize="10.5"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0" />
+
+                                <CheckBox IsChecked="{Binding UiReviewEnabled, Mode=TwoWay}"
+                                          IsEnabled="{Binding IsEditingEnabled}"
+                                          Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="UI review" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="ui_review"
+                                                       FontFamily="{StaticResource CodeFont}"
+                                                       FontSize="9"
+                                                       Foreground="{StaticResource MutedBrush}"
+                                                       Margin="7,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="Registers the designer for UI review passes."
+                                                   Style="{StaticResource MutedText}"
+                                                   FontSize="10.5"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </CheckBox>
+
+                                <CheckBox IsChecked="{Binding DesignDocsEnabled, Mode=TwoWay}"
+                                          IsEnabled="{Binding IsEditingEnabled}"
+                                          Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Design docs" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="design_docs"
+                                                       FontFamily="{StaticResource CodeFont}"
+                                                       FontSize="9"
+                                                       Foreground="{StaticResource MutedBrush}"
+                                                       Margin="7,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="Registers docs_design for design documentation."
+                                                   Style="{StaticResource MutedText}"
+                                                   FontSize="10.5"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </CheckBox>
+
+                                <CheckBox IsChecked="{Binding CouncilGeneralEnabled, Mode=TwoWay}"
+                                          IsEnabled="{Binding IsEditingEnabled}"
+                                          Margin="0,12,0,0">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Council (general)" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="council.general"
+                                                       FontFamily="{StaticResource CodeFont}"
+                                                       FontSize="9"
+                                                       Foreground="{StaticResource MutedBrush}"
+                                                       Margin="7,0,0,0"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                        <TextBlock Text="Registers the generalist, skeptic, and domain expert."
+                                                   Style="{StaticResource MutedText}"
+                                                   FontSize="10.5"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,2,0,0" />
+                                    </StackPanel>
+                                </CheckBox>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <Grid>
+                                    <TextBlock Text="Raw JSON" Style="{StaticResource SectionTitle}" />
+                                    <ToggleButton x:Name="RawJsonToggle"
+                                                  Content="Preview"
+                                                  Style="{StaticResource SubtleToggleButton}"
+                                                  HorizontalAlignment="Right"
+                                                  ToolTip="Show or hide the current configuration JSON" />
+                                </Grid>
+                                <TextBlock Text="Read-only snapshot of the config that will be written."
+                                           Style="{StaticResource MutedText}"
+                                           FontSize="10.5"
+                                           TextWrapping="Wrap"
+                                           Margin="0,4,0,0" />
+                                <Border Margin="0,10,0,0">
+                                    <Border.Style>
+                                        <Style TargetType="{x:Type Border}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsChecked, ElementName=RawJsonToggle}" Value="True">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBox Style="{StaticResource CodeTextBox}"
+                                             Text="{Binding RawJsonText, Mode=OneWay}"
+                                             Height="190" />
+                                </Border>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+
+            <!-- Footer -->
+            <Border Grid.Row="3"
+                    Background="{StaticResource HeaderBackgroundBrush}"
+                    BorderBrush="{StaticResource PanelBorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="16,0">
+                <Grid Height="46">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Ellipse Width="7" Height="7"
+                                 Style="{StaticResource StatusDot}"
+                                 Margin="0,0,8,0"
+                                 VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1"
+                                   Text="{Binding StatusText}"
+                                   FontSize="11.5"
+                                   Foreground="{StaticResource SubtleTextBrush}"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" />
+                    </Grid>
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding LastAction}"
+                               Style="{StaticResource MutedText}"
+                               FontSize="10.5"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               MaxWidth="320"
+                               Margin="0,0,18,0" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource LinkButton}"
+                            Command="{Binding OpenConfigFolderCommand}"
+                            VerticalAlignment="Center">
+                        <TextBlock Text="Open config folder"
+                                   FontSize="12"
+                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType={x:Type Button}}}" />
+                    </Button>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

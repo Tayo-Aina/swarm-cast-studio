@@ -1,0 +1,19 @@
+{
+  // JSONC fixture: comments, trailing commas, unknown keys at root and agent level.
+  "$schema": "https://unpkg.com/opencode-swarm@7.205.10/opencode-swarm.schema.json",
+  "unknown_root_key": "preserve-me",
+  "agents": {
+    "coder": {
+      "model": "opencode-go/kimi-k2.7-code",
+      "unknown_agent_key": 42,
+      "fallback_models": [
+        "opencode/big-pickle",
+      ],
+    },
+  },
+  "swarms": {
+    "demo": {
+      "name": "Demo",
+    },
+  },
+}

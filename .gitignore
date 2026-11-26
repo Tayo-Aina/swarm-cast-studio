@@ -1,0 +1,24 @@
+# Build output
+src/SwarmCastStudio/bin/
+src/SwarmCastStudio/obj/
+src/SwarmCastStudio/publish/
+src/SwarmCastStudio/publish-selfcontained/
+
+# Local test/runtime artifacts
+artifacts/
+tests/artifacts/
+tmp/
+*.log
+__pycache__/
+*.pyc
+
+# OpenCode / swarm local state
+.swarm/
+.opencode/
+
+# IDE / OS
+.vs/
+*.user
+*.suo
+Thumbs.db
+desktop.ini
